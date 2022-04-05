@@ -14,6 +14,8 @@ import numpy as np
 import networkx as nx 
 import matplotlib.pyplot as plt
 
+N_SUBJECTS = 70
+
 def readFile(filename, num_of_subjects, specific_voxel_target):
     fileInfo = filename.split('.')[0].split('_')
     type = fileInfo[2]
@@ -41,8 +43,8 @@ def readFile(filename, num_of_subjects, specific_voxel_target):
         nx.draw(connectome)
         plt.show()
     else:
-        connectomes = [nx.Graph()] * voxels
-        for subject in range(voxels):
+        connectomes = [nx.Graph()] * N_SUBJECTS
+        for subject in range(N_SUBJECTS):
             adj_matrix, edge_list = np.genfromtxt(filename, delimiter=',', max_rows=voxels, skip_header=subject*voxels), []
 
             for rn, row in enumerate(adj_matrix):
