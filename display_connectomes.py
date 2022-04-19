@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 N_SUBJECTS = 70
 
+
 def readFile(filename, num_of_subjects, specific_voxel_target):
     fileInfo = filename.split('.')[0].split('_')
     type = fileInfo[2]
@@ -56,8 +57,9 @@ def readFile(filename, num_of_subjects, specific_voxel_target):
                 plt.title("STRUCTURAL CONNECTIVITY MATRIX WITH " + str(voxels) + " NODES, SUBJECT: " + str(subject))
             elif type == "FC":
                 plt.title("FUNCTIONAL CONNECTIVITY MATRIX WITH " + str(voxels) + " NODES, SUBJECT: " + str(subject))
-            nx.draw(connectomes[subject])
-            plt.show()
+            #nx.draw(connectomes[subject])
+            #plt.show()
+    return connectomes
 
 def main():
     voxel_target = -1
@@ -76,7 +78,8 @@ def main():
 
     for filename in os.listdir(os.getcwd()):
         if filename.endswith(".csv"):
-            readFile(filename, num_of_subjects, voxel_target)
+            connectomes = readFile(filename, num_of_subjects, voxel_target)
+            
             continue
         else:
             continue
