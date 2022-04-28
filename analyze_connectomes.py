@@ -45,16 +45,29 @@ def draw_figure_3d(g1_mats, type1, g2_mats, type2):
     plt.show()
 
 
-def draw_avg_degree_vs_gre(m, type):
-    x, y = [], []
-    for val in m:
-        x.append(val[0])
-        y.append(val[1])
+def draw_avg_degree_vs_clustering_vs_gre(m1, t1, m2, t2):
 
-    plt.scatter(x, y)
-    plt.title("Avg Degree vs. Global Resource Efficiency for 70 Subjects, "+type+" - "+str(VOXELS)+" voxels")
-    plt.ylabel("Global Resource Efficiency")
-    plt.xlabel("Avg. Degree")
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.set_xlabel("Avg. Degree")
+    ax.set_ylabel("Avg. Clustering Coefficient")
+    ax.set_zlabel("Global Resource Efficiency")
+    ax.legend(loc='upper left')
+
+    for (m, t, cmap) in [(m1, t1, "greens"), (m2, t2, "reds")]:
+        xs, ys, zs = [], [], []
+        for (x, y, z) in m:
+            xs.append(x)
+            ys.append(y)
+            zs.append(z)
+            
+        ax.scatter(xs, ys, zs, cmap=cmap, label=t)
+
+    if m2 == []:
+        ax.set_title("Avg Degree vs. Avg. CC vs. Global Resource Efficiency for 70 Subjects ("+t1+", "+str(VOXELS)+" voxels)")
+    else:
+        ax.set_title("70 Subjects ({}, {} voxels) vs 70 {}".format(t1, VOXELS, t2))
+
     plt.show()
 
 # returns highest probability of path from a to b
@@ -116,18 +129,20 @@ def get_metrics(connectomes, random):
 
                 else:
                     distortion[vox_a][vox_b] = (1 - prob, math.log(1 - ETA) / math.log(1 - prob))
-                    #agg_resource_efficiency += ( 1 / distortion[vox_a][vox_b][1])
+                    agg_resource_efficiency += ( 1 / distortion[vox_a][vox_b][1])
 
         # save matricies for later processing
         figure_3D_matrices.append(distortion)
-        
-        # TODO: add to plots
-        #transitivity.append(nx.transitivity(connectomes[i]))
+
         # format: (avg degreee, global resource efficiency)
-        #resource_efficiency_plt.append((sum([n[1] for n in list(c.degree(weight="weight"))]) / VOXELS, agg_resource_efficiency / (VOXELS*VOXELS)))
+        if random:
+            resource_efficiency_plt.append((sum([n[1] for n in list(c.degree())]) / VOXELS, nx.average_clustering(connectomes[i]), agg_resource_efficiency / (VOXELS*VOXELS)))
+        else:
+            resource_efficiency_plt.append((sum([n[1] for n in list(c.degree(weight="weight"))]) / VOXELS, nx.average_clustering(connectomes[i], weight="weight"), agg_resource_efficiency / (VOXELS*VOXELS)))
+
         print("connectome {} completed.".format(i))
 
-    return figure_3D_matrices
+    return (figure_3D_matrices, resource_efficiency_plt)
 
 
 
@@ -150,7 +165,7 @@ def main():
         if not os.path.isfile(PICKLE_PATH+t+"_"+str(VOXELS)+"_graphs.p"):
             graphs = parse_file(type)
             metrics = get_metrics(graphs, False)
-            pickle.dump(metrics, open(PICKLE_PATH+t+"_"+str(VOXELS)+"_graphs.p", "wb"))
+            pickle.dump(graphs, open(PICKLE_PATH+t+"_"+str(VOXELS)+"_graphs.p", "wb"))
             pickle.dump(metrics, open(PICKLE_PATH+t+"_"+str(VOXELS)+"_metrics.p", "wb"))
 
     if not os.path.isfile(PICKLE_PATH+"random_"+str(VOXELS)+"_graphs.p"):
@@ -165,10 +180,9 @@ def main():
     FC_metrics = pickle.load(open(PICKLE_PATH+"SC_"+str(VOXELS)+"_metrics.p", "rb"))
     RG_metrics = pickle.load(open(PICKLE_PATH+"random_"+str(VOXELS)+"_metrics.p", "rb"))
 
-    #print("SC", sum([len(x) for x in SC_metrics]), "vs. rand", sum([len(x) for x in SC_metrics]))
-    draw_figure_3d(SC_metrics, "SC", RG_metrics, "random")
-    draw_figure_3d(SC_metrics, "SC", [], None)
-    draw_figure_3d(SC_metrics, "SC", FC_metrics, "FC")
+    #draw_avg_degree_vs_clustering_vs_gre(SC_metrics[1], "SC", RG_metrics[1], "random")
+    draw_avg_degree_vs_clustering_vs_gre(SC_metrics[1], "SC", FC_metrics[1], "FC")
+    draw_avg_degree_vs_clustering_vs_gre(SC_metrics[1], "SC", [], "")
 
 
 
